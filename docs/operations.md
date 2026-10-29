@@ -126,7 +126,7 @@ Changing either credential invalidates existing sessions. There is no email-base
 
 To run another instance from the same checkout, use a different Compose project name, image tag, environment file and port. `SOLOTASKS_ENV_FILE` selects the file passed to the containers; `--env-file` selects Compose interpolation values. Use both consistently so an alternate instance never reads your primary `.env`.
 
-For example, copy `.env.example` to `.env.second` and configure its own key, login, URL and port. In that file set `SOLOTASKS_ENV_FILE=.env.second`, `SOLOTASKS_IMAGE=ghcr.io/metalogico/solotasks:1.0.0` and a distinct `SESSION_COOKIE`, such as `solotasks_second_session`. Cookies are shared across ports on the same hostname, so each instance needs its own cookie name or hostname. Then use:
+For example, copy `.env.example` to `.env.second` and configure its own key, login, URL and port. In that file set `SOLOTASKS_ENV_FILE=.env.second`, `SOLOTASKS_IMAGE=ghcr.io/metalogico/solotasks:latest` and a distinct `SESSION_COOKIE`, such as `solotasks_second_session`. Cookies are shared across ports on the same hostname, so each instance needs its own cookie name or hostname. Then use:
 
 ```sh
 docker compose --env-file .env.second -p solotasks-second pull

@@ -33,23 +33,20 @@ Built with Laravel, PHP 8.4, Vue 3, Tailwind CSS and SQLite. Runs in Docker.
 
 ## Installation
 
-Use the versioned installation bundle attached to a successful [GitHub Release](https://github.com/metalogico/solotasks/releases). Images are published to `ghcr.io/metalogico/solotasks` for Linux AMD64 and ARM64. Docker chooses the host architecture. No Git, PHP, Python, Composer or Node installation is required on the server.
+Docker downloads the prebuilt GHCR images for Linux AMD64 or ARM64. No Git, PHP, Python, Composer or Node installation is required on the server. Docker Compose 2.24.4 or newer is required.
 
-The first planned version is **1.0.0**. These downloads become available after its release workflow succeeds and the GHCR packages are public. On macOS, replace `sha256sum -c` with `shasum -a 256 -c`.
+The workflow publishes images when code reaches `main`. Wait for **Publish Docker images** to succeed and for the GHCR packages to be public before installing. `latest` follows main; `sha-<full commit>` selects a specific build.
+
+Download the installation files from main. The archive also contains the source, but installation does not compile it:
 
 ```sh
-VERSION=1.0.0
 mkdir solotasks
 cd solotasks
-curl -fLO "https://github.com/metalogico/solotasks/releases/download/v${VERSION}/solotasks-${VERSION}-install.tar.gz"
-curl -fLO "https://github.com/metalogico/solotasks/releases/download/v${VERSION}/SHA256SUMS"
-sha256sum -c SHA256SUMS
-tar -xzf "solotasks-${VERSION}-install.tar.gz"
+curl -fL "https://github.com/metalogico/solotasks/archive/refs/heads/main.tar.gz" -o source.tar.gz
+tar -xzf source.tar.gz --strip-components=1
 ```
 
-For an existing installation, follow [the transition guide](docs/UPGRADING.md) instead of copying a new `.env`.
-
-You need Docker with Linux containers and Compose 2.24.4 or newer. Run the following commands in the extracted installation directory.
+For an existing installation, follow [the transition guide](docs/UPGRADING.md) instead of copying a new `.env`. Run the following commands in the extracted directory.
 
 ```sh
 cp -n .env.example .env
@@ -64,7 +61,7 @@ Keep an existing `.env` when updating. It contains your application key and pers
 docker compose pull
 ```
 
-The app and scheduler use the same published image, `ghcr.io/metalogico/solotasks:1.0.0`.
+The app and scheduler use the same published image, `ghcr.io/metalogico/solotasks:latest`.
 
 ### Set the application key and login
 
@@ -173,4 +170,4 @@ Format PHP with `vendor/bin/pint`. The Docker image contains production dependen
 
 ## Releases and source builds
 
-See [RELEASING.md](docs/RELEASING.md) for CI, GHCR publication and schema policy. For local Docker builds, use `docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait` from a source checkout with a separate development environment and data. See the same guide before adding optional backup overrides to a source build.
+See [RELEASING.md](docs/RELEASING.md) for local checks, GHCR publication and schema policy. For local Docker builds, use `docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait` from a source checkout with a separate development environment and data. See the same guide before adding optional backup overrides to a source build.
