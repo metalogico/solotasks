@@ -49,3 +49,6 @@ Thumbs.db
 *.sqlite-*
 *.db
 *.db-*
+
+# Local release packaging output
+dist-release/

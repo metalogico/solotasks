@@ -37,3 +37,7 @@
 *.db
 *.db-*
 .DS_Store
+
+# Local release packaging output
+dist-release/
+.github/

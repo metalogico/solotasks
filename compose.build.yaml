@@ -1,0 +1,7 @@
+# Source builds for development only. Add this file after compose.yaml.
+services:
+  app:
+    build: .
+    image: ${SOLOTASKS_BUILD_IMAGE:-solotasks:dev}
+  scheduler:
+    image: ${SOLOTASKS_BUILD_IMAGE:-solotasks:dev}

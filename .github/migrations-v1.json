@@ -1,0 +1,8 @@
+{
+  "database/migrations/0001_01_01_000000_create_users_table.php": "10d79883bc08ce46510f9ad8b1830b4d06d586dc56ae2c8bac3b3e491f69a90f",
+  "database/migrations/0001_01_01_000001_create_cache_table.php": "fbb4665e5a977e71df4e74ec75b3c06ca4f17ad0de7138fe9786639189978e77",
+  "database/migrations/0001_01_01_000002_create_jobs_table.php": "df4910687180313a14a3f96a8bddd808ae145ed1b107cd772caf865c0dc2b746",
+  "database/migrations/2026_10_27_083601_create_projects_table.php": "06831fc4d381dc8887d8accea2eab00b587411b0532a7ba3b89097a255c4c02c",
+  "database/migrations/2026_10_27_083602_create_milestones_table.php": "4091cec915c006bc02f14a64551bcdb89ef902962aba0fa29a7cbd721d788734",
+  "database/migrations/2026_10_27_083603_create_tasks_table.php": "4cdb8ebade38f8909fb403dd32ce73ef3519848dc704dd7e3d86b3be04adac3c"
+}

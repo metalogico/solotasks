@@ -33,36 +33,40 @@ Built with Laravel, PHP 8.4, Vue 3, Tailwind CSS and SQLite. Runs in Docker.
 
 ## Installation
 
-### Prerequisites
+Use the versioned installation bundle attached to a successful [GitHub Release](https://github.com/metalogico/solotasks/releases). Images are published to `ghcr.io/metalogico/solotasks` for Linux AMD64 and ARM64. Docker chooses the host architecture. No Git, PHP, Python, Composer or Node installation is required on the server.
 
-- Docker Engine or Docker Desktop with Docker Compose v2, including support for `docker compose up --wait`.
-- Git and enough disk space to build the application and retain its database and backups.
-- An available host port; the default is `8092` on `127.0.0.1`.
-
-PHP, Composer and Node.js run inside the image build; they are not required on the host. Compose builds from the checked-out source and the committed dependency lockfiles. No published SoloTasks image is required.
-
-### 1. Get the source and create the configuration
-
-For a fresh installation:
+The first planned version is **1.0.0**. These downloads become available after its release workflow succeeds and the GHCR packages are public. On macOS, replace `sha256sum -c` with `shasum -a 256 -c`.
 
 ```sh
-git clone https://github.com/metalogico/solotasks.git
+VERSION=1.0.0
+mkdir solotasks
 cd solotasks
+curl -fLO "https://github.com/metalogico/solotasks/releases/download/v${VERSION}/solotasks-${VERSION}-install.tar.gz"
+curl -fLO "https://github.com/metalogico/solotasks/releases/download/v${VERSION}/SHA256SUMS"
+sha256sum -c SHA256SUMS
+tar -xzf "solotasks-${VERSION}-install.tar.gz"
+```
+
+For an existing installation, follow [the transition guide](docs/UPGRADING.md) instead of copying a new `.env`.
+
+You need Docker with Linux containers and Compose 2.24.4 or newer. Run the following commands in the extracted installation directory.
+
+```sh
 cp -n .env.example .env
 chmod 600 .env
 ```
 
 Keep an existing `.env` when updating. It contains your application key and personal login configuration.
 
-### 2. Build the image
+### Download the image
 
 ```sh
-docker compose build app
+docker compose pull
 ```
 
-The app and scheduler use the same locally built image, `sh-solotasks:local`.
+The app and scheduler use the same published image, `ghcr.io/metalogico/solotasks:1.0.0`.
 
-### 3. Set the application key and login
+### Set the application key and login
 
 Generate an application key:
 
@@ -80,7 +84,7 @@ Use at least 12 characters and no more than 72 bytes. Copy the complete `SOLOTAS
 
 The application does not provide a default password, registration or a password reset email.
 
-### 4. Start SoloTasks
+### Start SoloTasks
 
 ```sh
 docker compose config --quiet
@@ -143,15 +147,7 @@ The default Compose project name is `sh-solotasks`, so volumes are prefixed with
 
 Backups run at **03:00 and 15:00 Europe/Rome**. They are retained until you remove them. A backup volume on the same disk does not protect against disk failure; export copies or use the external-directory override.
 
-Before updating, create and verify a backup, export it, and retain your `.env` and the previous source/image version. Then:
-
-```sh
-git pull --ff-only
-docker compose build app
-docker compose up -d --wait
-```
-
-See [operations](docs/operations.md) for manual backups, a complete restore procedure, password changes and update recovery.
+Before updating, create, verify and export a backup. Keep `.env`, the current image version and the same Compose project name. Follow [the upgrade guide](docs/UPGRADING.md), including stopping the scheduler before migrations. See [operations](docs/operations.md) for manual backups, restore and password changes.
 
 ## Development
 
@@ -174,3 +170,7 @@ Format PHP with `vendor/bin/pint`. The Docker image contains production dependen
 ## License
 
 [MIT](LICENSE). Copyright (c) 2026 Michele.
+
+## Releases and source builds
+
+See [RELEASING.md](docs/RELEASING.md) for CI, GHCR publication and schema policy. For local Docker builds, use `docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait` from a source checkout with a separate development environment and data. See the same guide before adding optional backup overrides to a source build.

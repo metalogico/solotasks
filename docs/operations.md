@@ -98,31 +98,13 @@ docker compose up -d --wait
 
 Sign in and check projects, tasks, milestones and both calendars. Keep the pre-restore files and exported snapshots until you have checked the recovered installation. Never use `migrate:fresh` or remove data volumes during an update or restore.
 
-On a new machine, first follow the installation steps, using the preserved `.env` and the matching source version, then import and restore the snapshot. Do not generate a replacement `APP_KEY` for an existing installation.
+On a new machine, first follow the installation steps, using the preserved `.env` and the matching image version, then import and restore the snapshot. Do not generate a replacement `APP_KEY` for an existing installation.
 
 ## Updates and rollback
 
-1. Create, verify and export a backup.
-2. Preserve `.env`, note the current source revision and retain the current image. With the default image name:
+Follow [UPGRADING.md](UPGRADING.md). Create, verify and export a backup, preserve `.env` and `APP_KEY`, and retain the previous image version. Pull the selected image, stop both app and scheduler, then recreate them using the same project name and volumes. Verify login, task editing, calendars and the backup schedule.
 
-   ```sh
-   docker image tag sh-solotasks:local sh-solotasks:before-update
-   ```
-
-3. Update the source, build and recreate:
-
-   ```sh
-   git pull --ff-only
-   docker compose build app
-   docker compose up -d --wait
-   docker compose ps
-   ```
-
-4. Check login, task editing, calendars and the backup schedule. Review `docker compose logs --tail=100 app scheduler` if startup fails.
-
-The entrypoint applies migrations while preserving existing data. If an update changes the schema, reverting only the image may be insufficient. For rollback, stop both services, restore the backup from before the update with its matching source/image, and recreate using that image. Set `SOLOTASKS_IMAGE=sh-solotasks:before-update` in `.env` to select the retained image; start without `--build` so it is not overwritten. Return to the normal image setting only when ready to update again.
-
-Do not remove backups or the previous image until the update is verified.
+Released migrations are incremental. After a schema change, rollback requires the matching pre-update backup as well as the previous image. Do not remove either until the update is verified.
 
 ## Change the login
 
@@ -144,10 +126,10 @@ Changing either credential invalidates existing sessions. There is no email-base
 
 To run another instance from the same checkout, use a different Compose project name, image tag, environment file and port. `SOLOTASKS_ENV_FILE` selects the file passed to the containers; `--env-file` selects Compose interpolation values. Use both consistently so an alternate instance never reads your primary `.env`.
 
-For example, copy `.env.example` to `.env.second` and configure its own key, login, URL and port. In that file set `SOLOTASKS_ENV_FILE=.env.second`, `SOLOTASKS_IMAGE=sh-solotasks:second` and a distinct `SESSION_COOKIE`, such as `solotasks_second_session`. Cookies are shared across ports on the same hostname, so each instance needs its own cookie name or hostname. Then use:
+For example, copy `.env.example` to `.env.second` and configure its own key, login, URL and port. In that file set `SOLOTASKS_ENV_FILE=.env.second`, `SOLOTASKS_IMAGE=ghcr.io/metalogico/solotasks:1.0.0` and a distinct `SESSION_COOKIE`, such as `solotasks_second_session`. Cookies are shared across ports on the same hostname, so each instance needs its own cookie name or hostname. Then use:
 
 ```sh
-docker compose --env-file .env.second -p solotasks-second build app
+docker compose --env-file .env.second -p solotasks-second pull
 docker compose --env-file .env.second -p solotasks-second up -d --wait
 ```
 
