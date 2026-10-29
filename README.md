@@ -33,35 +33,30 @@ Built with Laravel, PHP 8.4, Vue 3, Tailwind CSS and SQLite. Runs in Docker.
 
 ## Installation
 
-Docker downloads the prebuilt GHCR images for Linux AMD64 or ARM64. No Git, PHP, Python, Composer or Node installation is required on the server. Docker Compose 2.24.4 or newer is required.
+Docker image: **`ghcr.io/metalogico/solotasks:latest`**
 
-The workflow publishes images when code reaches `main`. Wait for **Publish Docker images** to succeed and for the GHCR packages to be public before installing. `latest` follows main; `sha-<full commit>` selects a specific build.
+Requires Docker with Compose 2.24.4 or newer. Images support `linux/amd64` and `linux/arm64`.
 
-Download the installation files from main. The archive also contains the source, but installation does not compile it:
+### Download the configuration
+
+For a new installation:
 
 ```sh
 mkdir solotasks
 cd solotasks
-curl -fL "https://github.com/metalogico/solotasks/archive/refs/heads/main.tar.gz" -o source.tar.gz
-tar -xzf source.tar.gz --strip-components=1
-```
-
-For an existing installation, follow [the transition guide](docs/UPGRADING.md) instead of copying a new `.env`. Run the following commands in the extracted directory.
-
-```sh
-cp -n .env.example .env
+curl -fL https://raw.githubusercontent.com/metalogico/solotasks/main/compose.yaml -o compose.yaml
+curl -fL https://raw.githubusercontent.com/metalogico/solotasks/main/.env.example -o .env.example
+cp .env.example .env
 chmod 600 .env
 ```
 
-Keep an existing `.env` when updating. It contains your application key and personal login configuration.
+Already installed? Keep your `.env` and follow [Updating](#data-backups-and-updates).
 
-### Download the image
+Pull the image:
 
 ```sh
 docker compose pull
 ```
-
-The app and scheduler use the same published image, `ghcr.io/metalogico/solotasks:latest`.
 
 ### Set the application key and login
 
@@ -140,34 +135,24 @@ Both restart with `unless-stopped`. Only the app publishes a port.
 | `storage` | `/var/www/html/storage` | Sessions, cache, compiled views and application working files |
 | `backups` | `/backups` | Verified SQLite snapshots |
 
-The default Compose project name is `sh-solotasks`, so volumes are prefixed with `sh-solotasks_`. Rebuilding or recreating containers preserves them. **Do not use `docker compose down -v` on an installation whose data you want to keep.**
+The default Compose project name is `sh-solotasks`, so volumes are prefixed with `sh-solotasks_`. Recreating containers preserves them. **Do not use `docker compose down -v` on an installation whose data you want to keep.**
 
 Backups run at **03:00 and 15:00 Europe/Rome**. They are retained until you remove them. A backup volume on the same disk does not protect against disk failure; export copies or use the external-directory override.
 
-Before updating, create, verify and export a backup. Keep `.env`, the current image version and the same Compose project name. Follow [the upgrade guide](docs/UPGRADING.md), including stopping the scheduler before migrations. See [operations](docs/operations.md) for manual backups, restore and password changes.
+Create, verify and export a backup before updating. See [operations](docs/operations.md) for backups, restore and password changes.
+
+```sh
+docker compose pull
+docker compose stop
+docker compose up -d --wait
+```
+
+Keep the same `.env`, Compose project, data and override files. If you pinned an image version, change its reference in `.env` before pulling. See [UPGRADING.md](docs/UPGRADING.md) for recovery and migration details.
 
 ## Development
 
-The source uses Laravel 13 and Vue 3 with Vite and Tailwind CSS 4. Dependency versions are recorded in `composer.lock` and `package-lock.json`.
-
-For local source work, install PHP 8.4 with the required extensions, Composer and Node.js 24, then run:
-
-```sh
-composer install
-npm ci
-npm test
-php artisan test --compact
-npm run build
-```
-
-The PHP tests use an in-memory SQLite database. Keep `APP_ENV=testing` and `DB_DATABASE=:memory:` as configured in `phpunit.xml`; do not point tests at an installation database. No test loads demo data into a running installation.
-
-Format PHP with `vendor/bin/pint`. The Docker image contains production dependencies only; run development tests in the source checkout.
+See [Development](docs/RELEASING.md#local-checks-before-merging) for source builds and local tests.
 
 ## License
 
 [MIT](LICENSE). Copyright (c) 2026 Michele.
-
-## Releases and source builds
-
-See [RELEASING.md](docs/RELEASING.md) for local checks, GHCR publication and schema policy. For local Docker builds, use `docker compose -f compose.yaml -f compose.build.yaml up -d --build --wait` from a source checkout with a separate development environment and data. See the same guide before adding optional backup overrides to a source build.

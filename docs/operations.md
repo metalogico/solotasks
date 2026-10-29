@@ -45,6 +45,12 @@ docker compose logs --tail=100 scheduler
 
 `compose.minipc.yaml` replaces the `backups` named volume with a dedicated existing host directory. It can be used on any server with a mounted backup disk.
 
+Download the override into the installation directory:
+
+```sh
+curl -fL https://raw.githubusercontent.com/metalogico/solotasks/main/compose.minipc.yaml -o compose.minipc.yaml
+```
+
 Create a folder reserved for SoloTasks backups, set its absolute path as `SOLOTASKS_BACKUP_DIR` in `.env`, and start with both files:
 
 ```sh
