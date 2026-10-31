@@ -14,7 +14,6 @@ x-environment: &environment
   CACHE_STORE: file
   QUEUE_CONNECTION: sync
   LOG_CHANNEL: stderr
-  SOLOTASKS_BACKUP_PATH: /backups
 
 services:
   app:
@@ -29,31 +28,13 @@ services:
     volumes:
       - data:/var/lib/sh-solotasks
       - storage:/var/www/html/storage
-      - backups:/backups
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/up') === false ? 1 : 0);"]
       interval: 30s
       timeout: 5s
       start_period: 30s
       retries: 3
-  scheduler:
-    image: ${SOLOTASKS_IMAGE:-ghcr.io/metalogico/solotasks:latest}
-    init: true
-    restart: unless-stopped
-    mem_limit: 128m
-    user: www-data
-    env_file: ${SOLOTASKS_ENV_FILE:-.env}
-    environment: *environment
-    entrypoint: ["php", "artisan", "schedule:work", "--no-interaction"]
-    depends_on:
-      app:
-        condition: service_healthy
-    volumes:
-      - data:/var/lib/sh-solotasks
-      - storage:/var/www/html/storage
-      - backups:/backups
 
 volumes:
   data:
   storage:
-  backups:

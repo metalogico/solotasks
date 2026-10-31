@@ -3,5 +3,3 @@ services:
   app:
     build: .
     image: ${SOLOTASKS_BUILD_IMAGE:-solotasks:dev}
-  scheduler:
-    image: ${SOLOTASKS_BUILD_IMAGE:-solotasks:dev}

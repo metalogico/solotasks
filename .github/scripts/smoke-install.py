@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix=f'{PROJECT}-install-') as directory:
     def execute(*args):
         return compose('exec', '-T', SERVICE, *args)
 
-    def check_web():
+    def check_health():
         target = 'https' if MINIFILES else 'app'
         internal = '8443' if MINIFILES else ('8080' if PROJECT == 'soloinventory' else '80')
         address = compose('port', target, internal).splitlines()[0]
@@ -77,12 +77,11 @@ with tempfile.TemporaryDirectory(prefix=f'{PROJECT}-install-') as directory:
                 time.sleep(1)
             args += ['--cacert', str(cert)]
         run(args + [scheme + '://' + address + endpoint])
-        run(args + [scheme + '://' + address + '/'])
 
     try:
         compose('config', '--quiet')
         compose('up', '-d', '--wait', '--wait-timeout', '180', '--pull', 'never')
-        check_web()
+        check_health()
         if MINIFILES:
             execute('python', '-c', 'from pathlib import Path; from backend.database import Database; '
                     'Database(Path("/config")).save_section(dict(id="ci",name="Keep",path="Keep",color="blue",position=0)); '
@@ -97,7 +96,7 @@ with tempfile.TemporaryDirectory(prefix=f'{PROJECT}-install-') as directory:
         # Stop background writers before allowing the new app to run migrations.
         compose('stop')
         compose('up', '-d', '--force-recreate', '--wait', '--wait-timeout', '180', '--pull', 'never')
-        check_web()
+        check_health()
         if MINIFILES:
             execute('python', '-c', 'from pathlib import Path; from backend.database import Database; '
                     'assert Database(Path("/config")).sections()[0]["name"] == "Keep"; '
@@ -107,7 +106,7 @@ with tempfile.TemporaryDirectory(prefix=f'{PROJECT}-install-') as directory:
             execute('php', '-r', '$db = new PDO("sqlite:".getenv("DB_DATABASE")); '
                     'if ($db->query("SELECT value FROM ci_persistence")->fetchColumn() !== "keep") exit(1); '
                     'if (file_get_contents("storage/app/private/ci-proof.txt") !== "keep") exit(1);')
-        print('Image-only install, web response and persistent data after recreation: passed.')
+        print('Image-only install, backend health and persistent data after recreation: passed.')
     except Exception:
         print(compose('logs', '--tail', '60'))
         raise

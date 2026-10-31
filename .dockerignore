@@ -18,7 +18,6 @@
 /.vscode
 /auth.json
 /recovery
-/backups
 /docs
 /tests
 /phpunit.xml

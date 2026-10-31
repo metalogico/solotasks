@@ -7,7 +7,6 @@ set -eu
 
 mkdir -p \
     /var/lib/sh-solotasks \
-    /backups \
     storage/app/private \
     storage/framework/cache/data \
     storage/framework/cache/locks \
@@ -20,8 +19,8 @@ if [ ! -f "$DB_DATABASE" ]; then
     touch "$DB_DATABASE"
 fi
 
-chown -R www-data:www-data /var/lib/sh-solotasks /backups storage bootstrap/cache
-chmod 700 /var/lib/sh-solotasks /backups
+chown -R www-data:www-data /var/lib/sh-solotasks storage bootstrap/cache
+chmod 700 /var/lib/sh-solotasks
 chmod 600 "$DB_DATABASE"
 
 php artisan migrate --force --no-interaction

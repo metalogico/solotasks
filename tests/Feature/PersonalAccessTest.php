@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Project;
 use App\PersonalAccess;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +21,6 @@ it('starts a personal session with configured credentials and ends it on logout'
 it('rejects incorrect credentials without creating an authenticated session', function (string $username, string $password): void {
     $this->postJson('/api/v1/session', compact('username', 'password'))
         ->assertUnprocessable()->assertJsonValidationErrors(['username'])
-        ->assertJsonPath('errors.username.0', 'The username or password is incorrect.')
         ->assertSessionMissing('personal_access');
 })->with([
     'wrong password' => ['michele-test', 'wrong-password'],
@@ -53,7 +51,7 @@ it('invalidates existing access when the configured password changes', function 
 
 it('protects every data endpoint before processing unauthenticated input', function (string $method, string $path): void {
     $this->json($method, '/api/v1/'.$path, ['name' => 'Unwanted record'])
-        ->assertUnauthorized()->assertJsonPath('message', 'Sign in to continue.');
+        ->assertUnauthorized();
     $this->assertDatabaseCount('projects', 0);
     $this->assertDatabaseCount('milestones', 0);
     $this->assertDatabaseCount('tasks', 0);
@@ -63,9 +61,8 @@ it('protects every data endpoint before processing unauthenticated input', funct
     ['POST', 'tasks'], ['PATCH', 'tasks/1'], ['DELETE', 'tasks/1'],
 ]);
 
-it('keeps private data out of the public shell and disables response caching', function (): void {
-    Project::factory()->create(['name' => 'PRIVATE-PROJECT-NAME']);
-
-    $this->get('/')->assertOk()->assertDontSee('PRIVATE-PROJECT-NAME')->assertHeader('X-Frame-Options', 'DENY');
-    $this->getJson('/api/v1/session')->assertJsonPath('authenticated', false)->assertJsonPath('username', null);
+it('hides personal identity and disables caching for unauthenticated session requests', function (): void {
+    $this->getJson('/api/v1/session')->assertOk()
+        ->assertJsonPath('authenticated', false)->assertJsonPath('username', null)
+        ->assertHeader('X-Frame-Options', 'DENY')->assertHeader('Cache-Control', 'no-store, private');
 });

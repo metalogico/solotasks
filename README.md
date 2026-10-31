@@ -4,7 +4,7 @@ A self-hosted task manager for one person. Organize tasks on a Kanban board, gro
 
 Built with Laravel, PHP 8.4, Vue 3, Tailwind CSS and SQLite. Runs in Docker.
 
-[Website](https://solotasks.metalogico.dev) · [Installation](#installation) · [Backup and recovery](docs/operations.md)
+[Website](https://solotasks.metalogico.dev) · [Installation](#installation) · [Operations](docs/operations.md)
 
 ![SoloTasks Kanban board with projects, milestones and a compact deadline calendar](docs/images/kanban.jpg)
 
@@ -21,7 +21,7 @@ Built with Laravel, PHP 8.4, Vue 3, Tailwind CSS and SQLite. Runs in Docker.
 - A full monthly calendar with its own project filter, month navigation and direct month selection.
 - A shared option to include completed tasks in both calendars.
 - One personal login configured through environment variables, with no registration or user management.
-- Persistent SQLite data and automatic, verified backups twice a day.
+- Persistent SQLite data.
 - English interface, locally bundled fonts and a layout that adapts to smaller screens.
 
 <details>
@@ -50,7 +50,7 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-Already installed? Keep your `.env` and follow [Updating](#data-backups-and-updates).
+Already installed? Keep your `.env` and follow [Updating](#data-and-updates).
 
 Pull the image:
 
@@ -86,7 +86,7 @@ docker compose ps
 
 Open [http://localhost:8092](http://localhost:8092) and sign in. A fresh installation starts empty. The entrypoint creates the database and applies migrations; it does not load demonstration data.
 
-If startup fails, inspect `docker compose logs --tail=100 app scheduler`. Check that `APP_KEY`, the username and a valid bcrypt hash are configured.
+If startup fails, inspect `docker compose logs --tail=100 app`. Check that `APP_KEY`, the username and a valid bcrypt hash are configured.
 
 ### Network access and configuration
 
@@ -100,13 +100,12 @@ If startup fails, inspect `docker compose logs --tail=100 app scheduler`. Check 
 | `SOLOTASKS_URL` | Full URL used to reach the application | `http://localhost:8092` |
 | `SESSION_SECURE_COOKIE` | Send session cookies only over HTTPS | `false` for local HTTP |
 | `SOLOTASKS_CALENDAR_INCLUDE_DONE` | Initial completed-task setting | `false` |
-| `SOLOTASKS_BACKUP_DIR` | Existing dedicated backup directory for the optional Compose override | See [operations](docs/operations.md#backups-on-another-disk) |
 
 To allow LAN access, set `SOLOTASKS_BIND_IP` to the server's LAN address, or `0.0.0.0` to bind all interfaces. Set `SOLOTASKS_URL` to the matching address and port, then recreate the containers with `docker compose up -d --force-recreate --wait`.
 
 The container serves HTTP on port 80. For HTTPS, put it behind your own reverse proxy and set `SOLOTASKS_URL` to the HTTPS URL and `SESSION_SECURE_COOKIE=true`. Keep the default localhost binding when the proxy runs on the host. Use a private network or VPN for remote personal access.
 
-The application and backup schedule use `Europe/Rome`. The interface uses English dates with a Monday-first week; task and milestone dates are calendar dates without UTC conversion.
+The application uses `Europe/Rome`. The interface uses English dates with a Monday-first week; task and milestone dates are calendar dates without UTC conversion.
 
 ## Using SoloTasks
 
@@ -118,33 +117,29 @@ The application and backup schedule use `Europe/Rome`. The interface uses Englis
 
 The heatmap counts tasks due on each date, with increasing intensity for 1, 2, 3–4 and 5 or more tasks. Completed tasks are excluded initially; **Include completed tasks** includes them in both calendars. Tasks without due dates stay on the board. A project can only be deleted after its tasks and milestones have been removed or moved.
 
-## Data, backups and updates
+## Data and updates
 
-Compose runs two services on a dedicated network:
+Compose runs one service on a dedicated network:
 
 | Service | Role | Memory limit |
 | --- | --- | --- |
 | `app` | Apache and PHP, plus database initialization and migrations | 512 MiB |
-| `scheduler` | Scheduled SQLite backups; starts after the app is healthy | 128 MiB |
 
-Both restart with `unless-stopped`. Only the app publishes a port.
+The app restarts with `unless-stopped` and publishes one HTTP port.
 
 | Volume | Container path | Contents |
 | --- | --- | --- |
 | `data` | `/var/lib/sh-solotasks` | `database.sqlite`, containing projects, milestones and tasks |
 | `storage` | `/var/www/html/storage` | Sessions, cache, compiled views and application working files |
-| `backups` | `/backups` | Verified SQLite snapshots |
 
 The default Compose project name is `sh-solotasks`, so volumes are prefixed with `sh-solotasks_`. Recreating containers preserves them. **Do not use `docker compose down -v` on an installation whose data you want to keep.**
 
-Backups run at **03:00 and 15:00 Europe/Rome**. They are retained until you remove them. A backup volume on the same disk does not protect against disk failure; export copies or use the external-directory override.
-
-Create, verify and export a backup before updating. See [operations](docs/operations.md) for backups, restore and password changes.
+Backup and recovery are managed entirely by external infrastructure. See [operations](docs/operations.md) for persistent data and password changes.
 
 ```sh
 docker compose pull
 docker compose stop
-docker compose up -d --wait
+docker compose up -d --wait --remove-orphans
 ```
 
 Keep the same `.env`, Compose project, data and override files. If you pinned an image version, change its reference in `.env` before pulling. See [UPGRADING.md](docs/UPGRADING.md) for recovery and migration details.

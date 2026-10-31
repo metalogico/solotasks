@@ -21,6 +21,8 @@ After first publication, set each GHCR package to **Public** in its package sett
 
 ## Local checks before merging
 
+Automated regression tests cover application logic, backend/API behavior, database queries, validation, security, persistence, migrations and infrastructure health. Do not add UI regression tests, including DOM/HTML assertions, rendered components, layout, styling, screenshots, visual snapshots, labels, display formatting or browser interaction flows. UI checks are manual. `npm test` covers only pure date calculations, not calendar rendering or labels. API validation tests assert status codes and invalid fields without fixing the wording of presentation messages.
+
 Use a development checkout with its own environment and isolated test data. Install the documented development dependencies first. Fetch origin/main and stable Git tags before running the migration guard, so it can protect already-released migrations too.
 
 ```sh
@@ -39,7 +41,7 @@ docker build -t solotasks:ci .
 python3 .github/scripts/smoke-install.py
 ```
 
-The smoke check creates its own project and temporary configuration, checks the web response and data persistence after recreation, and removes only its temporary stack. Repeat the build with `--platform linux/amd64` or `--platform linux/arm64` and run the corresponding image when checking another architecture. Never point tests at production data.
+The smoke check creates its own project and temporary configuration, checks backend health and data persistence after recreation, and removes only its temporary stack. Repeat the build with `--platform linux/amd64` or `--platform linux/arm64` and run the corresponding image when checking another architecture. Never point tests at production data.
 
 ## Source builds for development
 
@@ -48,7 +50,7 @@ docker compose -f compose.yaml -f compose.build.yaml build
 docker compose -f compose.yaml -f compose.build.yaml up -d --wait
 ```
 
-Use a dedicated development environment and storage. Keep both `-f` options for subsequent commands. This override uses `solotasks:dev` independently of the production image variable. For optional backup companions, add a final override selecting the same development app image. Do not mix builds across services sharing a database.
+Use a dedicated development environment and storage. Keep both `-f` options for subsequent commands. This override uses `solotasks:dev` independently of the production image variable.
 
 ## Schema policy from the first public image
 
@@ -57,9 +59,5 @@ The first public image freezes the current schema. This replaces the earlier dev
 The local migration guard checks the initial v1 hashes and all migration files from origin/main and stable Git tags (fetch them before checking). Do not update the hashes to bypass a failure. A new migration needs tests for a fresh database and an upgrade from the previous release with representative existing records/files. Check rollback after a failure and ensure existing values are preserved. Schema downgrades are not automatic; document any required restore procedure in release notes.
 
 See [UPGRADING.md](UPGRADING.md) for the first transition and subsequent updates. Image publication and server deployment are separate operations; the workflow never connects to or updates a server.
-
-## Optional operational companions
-
-The main source archive includes the standard installation files. Backup overrides are opt-in and retain their documented external-disk, identity-marker and permission requirements.
 
 References: [GitHub container publication](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images), [Docker multi-platform Actions builds](https://docs.docker.com/build/ci/github-actions/multi-platform/).
