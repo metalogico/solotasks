@@ -19,6 +19,7 @@ class BoardController extends Controller
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')],
             'month' => ['sometimes', 'date_format:Y-m'],
             'include_done' => ['sometimes', 'boolean'],
+            'assignee' => ['sometimes', 'required', Rule::in(Task::ASSIGNEES)],
         ]);
         $month = CarbonImmutable::createFromFormat('!Y-m', $filters['month'] ?? now()->format('Y-m'));
         $monthKey = $month->format('Y-m');
@@ -27,12 +28,13 @@ class BoardController extends Controller
         $tasks = Task::query()
             ->with(['project', 'milestone'])
             ->when($filters['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
+            ->when($filters['assignee'] ?? null, fn ($query, $assignee) => $query->where('assignee', $assignee))
             ->orderByRaw('due_date IS NULL')
             ->orderBy('due_date')
             ->orderBy('id')
             ->get();
 
-        // Calendar filters do not remove undated or completed tasks from the board.
+        // Month and completion filters do not remove undated or completed tasks from the board.
         $scheduledTasks = $tasks->filter(fn (Task $task) => $task->due_date
             && $task->due_date->format('Y-m') === $monthKey
             && ($includeDone || $task->status !== 'done'));
@@ -62,6 +64,7 @@ class BoardController extends Controller
             'calendar' => [
                 'month' => $monthKey,
                 'project_id' => isset($filters['project_id']) ? (int) $filters['project_id'] : null,
+                'assignee' => $filters['assignee'] ?? null,
                 'include_done' => $includeDone,
                 'days' => $calendarDays,
                 'total' => $scheduledTasks->count(),

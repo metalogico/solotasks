@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import Icon from './components/Icon.vue';
 import MiniCalendar from './components/MiniCalendar.vue';
 import TaskCard from './components/TaskCard.vue';
+import { assignees } from './assignees';
 import {
     currentMonth,
     formatDate,
@@ -27,6 +28,7 @@ const loading = ref(false);
 const projectId = ref('');
 const month = ref(currentMonth());
 const includeDone = ref(false);
+const assignee = ref('');
 const view = ref('board');
 const calendarProjectId = ref('');
 const calendarMonth = ref(currentMonth());
@@ -134,6 +136,7 @@ async function api(path, method = 'GET', data) {
 function boardQuery(selectedProjectId, selectedMonth) {
     return new URLSearchParams({
         ...(selectedProjectId ? { project_id: selectedProjectId } : {}),
+        ...(assignee.value ? { assignee: assignee.value } : {}),
         month: selectedMonth,
         include_done: includeDone.value ? '1' : '0',
     });
@@ -211,6 +214,7 @@ async function signOut() {
     try {
         await api('session', 'DELETE');
         authenticated.value = false;
+        assignee.value = '';
         board.value = { tasks: [], projects: [], milestones: [], calendar: { days: [], total: 0 } };
     } catch (cause) {
         error.value = cause.message;
@@ -245,6 +249,7 @@ function initialForm(type) {
         description: '',
         priority: 'medium',
         status: 'backlog',
+        assignee: 'me',
         due_date: '',
         project_id: defaultProjectId,
         milestone_id: '',
@@ -372,13 +377,13 @@ async function dropTask(event, status) {
     }
 }
 
-watch([projectId, month, includeDone], () => {
+watch([projectId, month, includeDone, assignee], () => {
     if (authenticated.value) {
         loadBoard();
     }
 });
 
-watch([calendarProjectId, calendarMonth, includeDone], () => {
+watch([calendarProjectId, calendarMonth, includeDone, assignee], () => {
     if (authenticated.value && view.value === 'calendar') {
         loadCalendar();
     }
@@ -682,6 +687,7 @@ onMounted(async () => {
                 />
                 <p class="mt-2 text-[9px] text-stone-400">
                     {{ selectedProject?.name || 'All projects' }} ·
+                    {{ assignee ? assignees[assignee] : 'All assignees' }} ·
                     {{ includeDone ? 'Done included' : 'Done excluded' }}
                 </p>
             </div>
@@ -820,6 +826,22 @@ onMounted(async () => {
                         </button>
                     </div>
                     <div class="flex flex-wrap items-center gap-3">
+                        <label class="flex items-center gap-2 text-[11px] text-stone-500">
+                            Assigned to
+                            <select
+                                class="select-field rounded-md border border-stone-200 bg-white py-1.5 pl-2 text-xs text-stone-700"
+                                v-model="assignee"
+                            >
+                                <option value="">All</option>
+                                <option
+                                    v-for="(name, key) in assignees"
+                                    :key="key"
+                                    :value="key"
+                                >
+                                    {{ name }}
+                                </option>
+                            </select>
+                        </label>
                         <select
                             class="select-field max-w-40 rounded-md border-0 bg-transparent py-1 text-xs text-stone-500"
                             aria-label="Manage milestones"
@@ -1001,7 +1023,8 @@ onMounted(async () => {
                     {{ extendedCalendar.total }} task{{
                         extendedCalendar.total === 1 ? '' : 's'
                     }}
-                    due · {{ includeDone ? 'Done included' : 'Done excluded' }} · This filter is
+                    due · {{ assignee ? assignees[assignee] : 'All assignees' }} ·
+                    {{ includeDone ? 'Done included' : 'Done excluded' }} · The project filter is
                     independent of the board.
                 </p>
                 <div
@@ -1077,6 +1100,9 @@ onMounted(async () => {
                                     v-if="task.priority === 'high'"
                                     class="ml-1 text-red-700"
                                 >•</span>
+                                <span class="mt-1 block text-[9px] text-stone-500">
+                                    {{ assignees[task.assignee] }}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -1211,21 +1237,38 @@ onMounted(async () => {
                         </label>
                     </div>
                     <template v-if="modalType === 'task'">
-                        <label>
-                            <span class="label">Column</span>
-                            <select
-                                class="select-field field"
-                                v-model="form.status"
-                            >
-                                <option
-                                    v-for="status in statuses"
-                                    :key="status.key"
-                                    :value="status.key"
+                        <div class="grid grid-cols-2 gap-4">
+                            <label>
+                                <span class="label">Column</span>
+                                <select
+                                    class="select-field field"
+                                    v-model="form.status"
                                 >
-                                    {{ status.name }}
-                                </option>
-                            </select>
-                        </label>
+                                    <option
+                                        v-for="status in statuses"
+                                        :key="status.key"
+                                        :value="status.key"
+                                    >
+                                        {{ status.name }}
+                                    </option>
+                                </select>
+                            </label>
+                            <label>
+                                <span class="label">Assigned to</span>
+                                <select
+                                    class="select-field field"
+                                    v-model="form.assignee"
+                                >
+                                    <option
+                                        v-for="(name, key) in assignees"
+                                        :key="key"
+                                        :value="key"
+                                    >
+                                        {{ name }}
+                                    </option>
+                                </select>
+                            </label>
+                        </div>
                         <p class="text-[11px] leading-5 text-stone-400">
                             The due date places the task in the calendar. Leave it blank to schedule
                             it later.

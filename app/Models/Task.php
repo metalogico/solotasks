@@ -16,9 +16,11 @@ class Task extends Model
 
     public const PRIORITIES = ['high', 'medium', 'low'];
 
-    protected $fillable = ['name', 'description', 'priority', 'status', 'due_date', 'project_id', 'milestone_id'];
+    public const ASSIGNEES = ['me', 'agent'];
 
-    protected $attributes = ['priority' => 'medium', 'status' => 'backlog'];
+    protected $fillable = ['name', 'description', 'priority', 'status', 'assignee', 'due_date', 'project_id', 'milestone_id'];
+
+    protected $attributes = ['priority' => 'medium', 'status' => 'backlog', 'assignee' => 'me'];
 
     protected function casts(): array
     {

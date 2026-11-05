@@ -48,7 +48,7 @@ it('replaces only local project data and can reload the same demo without duplic
     ]);
 });
 
-it('loads the agreed date distribution and project-owned milestone associations', function (): void {
+it('loads the demo date distribution and project-owned milestone associations', function (): void {
     app()->instance('env', 'local');
 
     $this->seed(DemoSeeder::class);
