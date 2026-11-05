@@ -24,6 +24,7 @@ class TaskRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string', 'max:20000'],
             'priority' => ['sometimes', 'required', Rule::in(Task::PRIORITIES)],
             'status' => ['sometimes', 'required', Rule::in(Task::STATUSES)],
+            'assignee' => ['sometimes', 'required', Rule::in(Task::ASSIGNEES)],
             'due_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'project_id' => [
                 $this->isMethod('POST') ? 'required' : 'sometimes',
@@ -67,6 +68,8 @@ class TaskRequest extends FormRequest
             'due_date.date_format' => 'Enter a valid due date in YYYY-MM-DD format.',
             'priority.in' => 'Choose a high, medium or low priority.',
             'status.in' => 'Choose one of the five board columns.',
+            'assignee.required' => 'Choose Me or Agent.',
+            'assignee.in' => 'Choose Me or Agent.',
         ];
     }
 }

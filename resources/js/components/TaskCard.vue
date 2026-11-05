@@ -1,6 +1,7 @@
 <script setup>
 import Icon from './Icon.vue';
 import { dateKey, formatDate, priorities } from '../calendar';
+import { assignees } from '../assignees';
 defineProps({ task: Object });
 defineEmits(['open', 'drag']);
 </script>
@@ -48,7 +49,9 @@ defineEmits(['open', 'drag']);
             />
             <span class="truncate">{{ task.milestone.name }}</span>
         </div>
-        <div class="mt-4 flex items-center gap-2 border-t border-stone-100 pt-3">
+        <div
+            class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 pt-3"
+        >
             <span
                 class="flex items-center gap-1.5 text-[11px]"
                 :class="
@@ -62,6 +65,17 @@ defineEmits(['open', 'drag']);
                     :size="13"
                 />
                 {{ formatDate(task.due_date) }}
+            </span>
+            <span
+                class="rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                :class="
+                    task.assignee === 'agent'
+                        ? 'bg-emerald-50 text-emerald-800'
+                        : 'bg-stone-100 text-stone-500'
+                "
+                :aria-label="`Assigned to ${assignees[task.assignee]}`"
+            >
+                {{ assignees[task.assignee] }}
             </span>
         </div>
     </article>

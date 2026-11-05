@@ -29,11 +29,12 @@ Thumbs.db
 /.env.*
 !/.env.example
 
-# Local agent instructions and workstation state.
+# Local configuration and tooling.
 /AGENTS.md
 /.agents/
 /.ai/
 /boost.json
+/build.sh
 
 # Recovery exports, credentials and local overrides.
 /recovery/
